@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Authors>Applied Accountability Services LLC</Authors>
+    <Company>Applied Accountability Services LLC</Company>
+    <Product>Applied Accountability Infrastructure</Product>
+    <Description>Reusable infrastructure components for enterprise .NET applications including HTTP clients with Polly resilience, caching, and more.</Description>
+    <Copyright>Copyright © Applied Accountability Services LLC 2025</Copyright>
+    <PackageProjectUrl>https://github.com/appliedaccountability/applied-accountability-infrastructure</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/appliedaccountability/applied-accountability-infrastructure</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>infrastructure;http;polly;resilience;enterprise;dotnet</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- HTTP and Resilience -->
+    <PackageReference Include="Microsoft.Extensions.Http" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Http.Polly" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="System.Text.Json" Version="9.0.10" />
+  </ItemGroup>
+
+</Project>
