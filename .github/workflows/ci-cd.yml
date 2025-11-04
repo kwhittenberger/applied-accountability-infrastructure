@@ -11,6 +11,7 @@ env:
   DOTNET_VERSION: '10.0.x'
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: true
   DOTNET_CLI_TELEMETRY_OPTOUT: true
+  DOTNET_INSTALL_DIR: './.dotnet'
 
 jobs:
   build-and-test:
@@ -27,6 +28,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -38,6 +40,10 @@ jobs:
 
     - name: Restore test dependencies
       run: dotnet restore
+      working-directory: ./tests/AppliedAccountability.Infrastructure.Tests
+
+    - name: Build tests
+      run: dotnet build --configuration Release --no-restore
       working-directory: ./tests/AppliedAccountability.Infrastructure.Tests
 
     - name: Run tests
@@ -77,6 +83,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -102,6 +109,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
 
     - name: Restore dependencies
       run: dotnet restore
@@ -138,6 +146,7 @@ jobs:
       uses: actions/setup-dotnet@v4
       with:
         dotnet-version: ${{ env.DOTNET_VERSION }}
+        dotnet-quality: 'preview'
 
     - name: Publish to NuGet
       run: dotnet nuget push ./nupkg/*.nupkg --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
