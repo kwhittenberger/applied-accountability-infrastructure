@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <Authors>Applied Accountability Services LLC</Authors>
+    <Company>Applied Accountability Services LLC</Company>
+    <Product>Applied Accountability Security</Product>
+    <Description>Comprehensive security library for .NET applications including authentication, authorization, encryption, and data protection.</Description>
+    <Copyright>Copyright © Applied Accountability Services LLC 2025</Copyright>
+    <PackageProjectUrl>https://github.com/appliedaccountability/applied-accountability-infrastructure</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/appliedaccountability/applied-accountability-infrastructure</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>security;authentication;authorization;encryption;jwt;data-protection;dotnet</PackageTags>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0.0</AssemblyVersion>
+    <FileVersion>1.0.0.0</FileVersion>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="9.0.10" />
+    <PackageReference Include="Microsoft.AspNetCore.DataProtection" Version="9.0.10" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="9.0.10" />
+    <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.3.1" />
+  </ItemGroup>
+
+</Project>
