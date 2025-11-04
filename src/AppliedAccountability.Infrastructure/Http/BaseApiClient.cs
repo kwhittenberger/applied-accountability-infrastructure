@@ -69,13 +69,26 @@ public abstract class BaseApiClient
 
             return result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -117,13 +130,26 @@ public abstract class BaseApiClient
 
             return result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -165,13 +191,26 @@ public abstract class BaseApiClient
 
             return result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -210,13 +249,26 @@ public abstract class BaseApiClient
 
             return response.IsSuccessStatusCode;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -258,13 +310,26 @@ public abstract class BaseApiClient
 
             return result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -303,13 +368,26 @@ public abstract class BaseApiClient
 
             return response.IsSuccessStatusCode;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -348,13 +426,26 @@ public abstract class BaseApiClient
 
             return result;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -390,13 +481,26 @@ public abstract class BaseApiClient
 
             return response.IsSuccessStatusCode;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 
@@ -433,13 +537,26 @@ public abstract class BaseApiClient
             // Note: Caller is responsible for disposing the returned HttpResponseMessage
             return response;
         }
-        catch (Exception ex)
+        catch (HttpRequestException ex)
         {
             stopwatch.Stop();
             Logger.LogError(ex,
-                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                "[{RequestId}] {OperationName} HTTP request failed after {ElapsedMs}ms. URL: {Url}",
                 requestId, operationName, stopwatch.ElapsedMilliseconds, url);
             throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (TaskCanceledException ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} timed out after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+        catch (ApiClientException)
+        {
+            stopwatch.Stop();
+            throw;
         }
     }
 

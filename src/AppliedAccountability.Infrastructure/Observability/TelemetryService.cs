@@ -71,9 +71,13 @@ public class TelemetryService : ITelemetryService
 
             _logger.LogDebug("Counter recorded: {Name} = {Value}, Tags: {Tags}", name, value, tags);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error recording counter: {Name}", name);
+            _logger.LogError(ex, "Invalid argument when recording counter: {Name}", name);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when recording counter: {Name}", name);
         }
     }
 
@@ -87,9 +91,13 @@ public class TelemetryService : ITelemetryService
 
             _logger.LogDebug("Gauge recorded: {Name} = {Value}, Tags: {Tags}", name, value, tags);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error recording gauge: {Name}", name);
+            _logger.LogError(ex, "Invalid argument when recording gauge: {Name}", name);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when recording gauge: {Name}", name);
         }
     }
 
@@ -104,9 +112,13 @@ public class TelemetryService : ITelemetryService
 
             _logger.LogDebug("Histogram recorded: {Name} = {Value}, Tags: {Tags}", name, value, tags);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error recording histogram: {Name}", name);
+            _logger.LogError(ex, "Invalid argument when recording histogram: {Name}", name);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when recording histogram: {Name}", name);
         }
     }
 

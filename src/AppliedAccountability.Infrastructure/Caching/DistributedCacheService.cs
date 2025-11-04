@@ -51,9 +51,14 @@ public class DistributedCacheService : IDistributedCacheService
             _logger.LogDebug("Cache hit for key: {CacheKey}", key);
             return result;
         }
-        catch (Exception ex)
+        catch (JsonException ex)
         {
-            _logger.LogError(ex, "Error retrieving cache value for key: {CacheKey}", key);
+            _logger.LogError(ex, "JSON deserialization error for cache key: {CacheKey}", key);
+            return null;
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogWarning(ex, "Cache retrieval cancelled for key: {CacheKey}", key);
             return null;
         }
     }
@@ -78,10 +83,15 @@ public class DistributedCacheService : IDistributedCacheService
                 key,
                 expiration ?? _defaultExpiration);
         }
-        catch (Exception ex)
+        catch (JsonException ex)
         {
-            _logger.LogError(ex, "Error setting cache value for key: {CacheKey}", key);
-            throw new CacheException($"Failed to set cache value for key: {key}", ex);
+            _logger.LogError(ex, "JSON serialization error for cache key: {CacheKey}", key);
+            throw new CacheException($"Failed to serialize value for key: {key}", ex);
+        }
+        catch (OperationCanceledException ex)
+        {
+            _logger.LogWarning(ex, "Cache set operation cancelled for key: {CacheKey}", key);
+            throw;
         }
     }
 
@@ -95,10 +105,10 @@ public class DistributedCacheService : IDistributedCacheService
             await _cache.RemoveAsync(key, cancellationToken);
             _logger.LogDebug("Cache removed for key: {CacheKey}", key);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogError(ex, "Error removing cache value for key: {CacheKey}", key);
-            throw new CacheException($"Failed to remove cache value for key: {key}", ex);
+            _logger.LogWarning(ex, "Cache removal cancelled for key: {CacheKey}", key);
+            throw;
         }
     }
 
@@ -112,9 +122,9 @@ public class DistributedCacheService : IDistributedCacheService
             var cachedData = await _cache.GetStringAsync(key, cancellationToken);
             return !string.IsNullOrEmpty(cachedData);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogError(ex, "Error checking cache existence for key: {CacheKey}", key);
+            _logger.LogWarning(ex, "Cache existence check was cancelled for key: {CacheKey}", key);
             return false;
         }
     }
@@ -172,10 +182,10 @@ public class DistributedCacheService : IDistributedCacheService
             await _cache.RefreshAsync(key, cancellationToken);
             _logger.LogDebug("Cache refreshed for key: {CacheKey}", key);
         }
-        catch (Exception ex)
+        catch (OperationCanceledException ex)
         {
-            _logger.LogError(ex, "Error refreshing cache for key: {CacheKey}", key);
-            throw new CacheException($"Failed to refresh cache for key: {key}", ex);
+            _logger.LogWarning(ex, "Cache refresh cancelled for key: {CacheKey}", key);
+            throw;
         }
     }
 }

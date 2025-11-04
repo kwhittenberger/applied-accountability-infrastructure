@@ -8,7 +8,7 @@ using Moq.Protected;
 
 namespace AppliedAccountability.Infrastructure.Tests.Http;
 
-public class BaseApiClientTests
+public class BaseApiClientTests : IDisposable
 {
     private readonly Mock<ILogger<TestApiClient>> _mockLogger;
     private readonly Mock<HttpMessageHandler> _mockHttpMessageHandler;
@@ -24,6 +24,12 @@ public class BaseApiClientTests
             BaseAddress = new Uri("https://api.example.com")
         };
         _client = new TestApiClient(_httpClient, _mockLogger.Object);
+    }
+
+    public void Dispose()
+    {
+        _httpClient?.Dispose();
+        GC.SuppressFinalize(this);
     }
 
     #region GET Tests
@@ -436,7 +442,8 @@ public class BaseApiClientTests
 
         // Assert
         Assert.NotNull(result);
-        Assert.Equal(DateTimeKind.Utc, result.Value.Kind);
+        var dateTime = result.Value;
+        Assert.Equal(DateTimeKind.Utc, dateTime.Kind);
     }
 
     #endregion
