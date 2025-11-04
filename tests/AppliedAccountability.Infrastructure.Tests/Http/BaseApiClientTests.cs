@@ -358,7 +358,7 @@ public class BaseApiClientTests
         // Assert
         Assert.Contains("name=test", result);
         Assert.Contains("age=25", result);
-        Assert.Contains("city=New", result);
+        Assert.Contains("city=New%20York", result);
     }
 
     [Fact]

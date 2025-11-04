@@ -51,7 +51,7 @@ public abstract class BaseApiClient
 
         try
         {
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.GetAsync(url, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -99,7 +99,7 @@ public abstract class BaseApiClient
         {
             var requestContent = SerializeRequest(request);
 
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.PostAsync(url, requestContent, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -147,7 +147,7 @@ public abstract class BaseApiClient
         {
             var requestContent = SerializeRequest(request);
 
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.PutAsync(url, requestContent, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -195,7 +195,7 @@ public abstract class BaseApiClient
         {
             var requestContent = SerializeRequest(request);
 
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.PutAsync(url, requestContent, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -240,7 +240,7 @@ public abstract class BaseApiClient
         {
             var requestContent = SerializeRequest(request);
 
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.PatchAsync(url, requestContent, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -288,7 +288,7 @@ public abstract class BaseApiClient
         {
             var requestContent = SerializeRequest(request);
 
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.PatchAsync(url, requestContent, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -330,7 +330,7 @@ public abstract class BaseApiClient
 
         try
         {
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.DeleteAsync(url, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -375,7 +375,7 @@ public abstract class BaseApiClient
 
         try
         {
-            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            using var response = await _resiliencePolicy.ExecuteAsync(async () =>
             {
                 var httpResponse = await HttpClient.DeleteAsync(url, cancellationToken);
                 await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
@@ -430,6 +430,7 @@ public abstract class BaseApiClient
                 "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms",
                 requestId, operationName, stopwatch.ElapsedMilliseconds);
 
+            // Note: Caller is responsible for disposing the returned HttpResponseMessage
             return response;
         }
         catch (Exception ex)

@@ -90,7 +90,15 @@ public static class JsonSerializationHelper
         {
             return JsonSerializer.Deserialize<T>(json, options ?? DefaultOptions);
         }
-        catch
+        catch (JsonException)
+        {
+            return defaultValue;
+        }
+        catch (NotSupportedException)
+        {
+            return defaultValue;
+        }
+        catch (ArgumentException)
         {
             return defaultValue;
         }

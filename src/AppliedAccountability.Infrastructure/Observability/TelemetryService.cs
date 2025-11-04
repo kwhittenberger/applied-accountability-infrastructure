@@ -135,9 +135,13 @@ public class TelemetryService : ITelemetryService
                 exception.Message,
                 tags);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error recording exception");
+            _logger.LogError(ex, "Invalid argument when recording exception");
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when recording exception");
         }
     }
 
@@ -157,9 +161,13 @@ public class TelemetryService : ITelemetryService
 
             _logger.LogInformation("Event recorded: {EventName}, Tags: {Tags}", eventName, tags);
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error recording event: {EventName}", eventName);
+            _logger.LogError(ex, "Invalid argument when recording event: {EventName}", eventName);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when recording event: {EventName}", eventName);
         }
     }
 
@@ -175,9 +183,13 @@ public class TelemetryService : ITelemetryService
                 _logger.LogDebug("Tag added to activity: {Key} = {Value}", key, value);
             }
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error adding tag: {Key}", key);
+            _logger.LogError(ex, "Invalid argument when adding tag: {Key}", key);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when adding tag: {Key}", key);
         }
     }
 
@@ -193,9 +205,13 @@ public class TelemetryService : ITelemetryService
                 _logger.LogDebug("Baggage added to activity: {Key} = {Value}", key, value);
             }
         }
-        catch (Exception ex)
+        catch (ArgumentException ex)
         {
-            _logger.LogError(ex, "Error adding baggage: {Key}", key);
+            _logger.LogError(ex, "Invalid argument when adding baggage: {Key}", key);
+        }
+        catch (InvalidOperationException ex)
+        {
+            _logger.LogError(ex, "Invalid operation when adding baggage: {Key}", key);
         }
     }
 }
