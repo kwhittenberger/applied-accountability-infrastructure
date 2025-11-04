@@ -115,7 +115,7 @@ Planned additions to this package:
 
 ## Requirements
 
-- .NET 9.0 or later
+- .NET 10.0 or later
 - Microsoft.Extensions.Http.Polly 9.0.10+
 - Microsoft.Extensions.Logging 9.0.10+
 
