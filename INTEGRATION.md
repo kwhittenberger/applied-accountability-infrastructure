@@ -20,15 +20,30 @@ Applied Accountability Infrastructure is a **reusable library of enterprise-grad
 ### Current Features
 
 - **HTTP Client with Resilience**: Base client with automatic retry, circuit breaker, and timeout
+  - Full REST support: GET, POST, PUT, PATCH, DELETE
+  - Automatic retry with exponential backoff
+  - Circuit breaker pattern
+  - Timeout policies
 - **Comprehensive Logging**: Structured logging with request IDs and metrics
 - **Helper Utilities**: Query string building, safe data extraction, JSON serialization
+- **Distributed Caching**: Redis and memory cache with IDistributedCacheService
+- **Validation Framework**: Common validation rules and extensions
+- **Serialization Helpers**: Custom JSON converters (UTC DateTime, trimming, etc.)
+- **Observability & Telemetry**: Full OpenTelemetry support
+  - Distributed tracing with ActivitySource
+  - Metrics with System.Diagnostics.Metrics
+  - Health checks
+  - Custom telemetry service
+- **Unit Testing**: Comprehensive xUnit test suite with Moq
+- **CI/CD Pipeline**: GitHub Actions with automated testing and packaging
 
 ### Planned Features
 
-- **Distributed Caching**: Redis-backed cache helpers
-- **Validation Framework**: FluentValidation extensions
-- **Serialization Helpers**: Custom JSON converters
-- **Mapping Utilities**: AutoMapper profiles
+- **Data Access Layer**: Entity Framework Core and Dapper support (Q1 2025)
+- **Messaging**: RabbitMQ and Azure Service Bus integration (Q1 2025)
+- **Security**: Authentication, authorization, encryption (Q2 2025)
+- **Background Jobs**: Hangfire and Quartz.NET integration (Q2 2025)
+- See [INFRASTRUCTURE_ROADMAP.md](./INFRASTRUCTURE_ROADMAP.md) for complete roadmap
 
 ## Quick Start
 
@@ -192,24 +207,73 @@ public async Task<bool> SendNotificationAsync(NotificationRequest request)
 }
 ```
 
-### PUT, PATCH, DELETE (Planned)
+### PUT, PATCH, DELETE
 
-**Status**: Not yet implemented - planned for future release.
+**Status**: ✅ Implemented
 
-**Current Workaround**: Use `HttpClient` directly in your derived class:
+#### PUT Requests
 
 ```csharp
-public async Task<UpdateResponse> UpdateUserAsync(int userId, UpdateUserRequest request)
+// PUT with request/response bodies
+public async Task<UserResponse> UpdateUserAsync(int userId, UpdateUserRequest request)
 {
     var url = $"/api/users/{userId}";
-    var json = JsonSerializer.Serialize(request, JsonOptions);
-    var content = new StringContent(json, Encoding.UTF8, "application/json");
+    return await PutAsync<UpdateUserRequest, UserResponse>(
+        url,
+        request,
+        "UpdateUser");
+}
 
-    var response = await HttpClient.PutAsync(url, content);
-    response.EnsureSuccessStatusCode();
+// PUT with no response body (returns bool)
+public async Task<bool> UpdateUserStatusAsync(int userId, StatusRequest request)
+{
+    var url = $"/api/users/{userId}/status";
+    return await PutAsync<StatusRequest>(
+        url,
+        request,
+        "UpdateUserStatus");
+}
+```
 
-    var responseJson = await response.Content.ReadAsStringAsync();
-    return JsonSerializer.Deserialize<UpdateResponse>(responseJson, JsonOptions);
+#### PATCH Requests
+
+```csharp
+// PATCH with request/response bodies
+public async Task<UserResponse> PatchUserAsync(int userId, PatchUserRequest request)
+{
+    var url = $"/api/users/{userId}";
+    return await PatchAsync<PatchUserRequest, UserResponse>(
+        url,
+        request,
+        "PatchUser");
+}
+
+// PATCH with no response body (returns bool)
+public async Task<bool> PatchUserEmailAsync(int userId, EmailPatchRequest request)
+{
+    var url = $"/api/users/{userId}/email";
+    return await PatchAsync<EmailPatchRequest>(
+        url,
+        request,
+        "PatchUserEmail");
+}
+```
+
+#### DELETE Requests
+
+```csharp
+// DELETE with response body
+public async Task<DeleteResponse> DeleteUserAsync(int userId)
+{
+    var url = $"/api/users/{userId}";
+    return await DeleteAsync<DeleteResponse>(url, "DeleteUser");
+}
+
+// DELETE with no response body (returns bool)
+public async Task<bool> DeleteUserNoResponseAsync(int userId)
+{
+    var url = $"/api/users/{userId}";
+    return await DeleteAsync(url, "DeleteUser");
 }
 ```
 
@@ -252,6 +316,222 @@ var score = GetDoubleValue(responseData, "score");          // 95.5
 // Returns null if key doesn't exist or conversion fails
 var missing = GetIntValue(responseData, "nonExistent");     // null
 ```
+
+## Distributed Caching
+
+### Setup
+
+Register the cache service in `Program.cs`:
+
+```csharp
+// Option 1: Redis (Production)
+builder.Services.AddStackExchangeRedisCache(options =>
+{
+    options.Configuration = "localhost:6379";
+    options.InstanceName = "MyApp_";
+});
+
+// Option 2: Memory Cache (Development/Testing)
+builder.Services.AddDistributedMemoryCache();
+
+// Register the cache service
+builder.Services.AddSingleton<IDistributedCacheService, DistributedCacheService>();
+```
+
+### Usage
+
+```csharp
+public class UserService
+{
+    private readonly IDistributedCacheService _cache;
+
+    public UserService(IDistributedCacheService cache)
+    {
+        _cache = cache;
+    }
+
+    public async Task<User?> GetUserAsync(int userId)
+    {
+        var cacheKey = $"user:{userId}";
+
+        // Try to get from cache
+        var cachedUser = await _cache.GetAsync<User>(cacheKey);
+        if (cachedUser != null)
+            return cachedUser;
+
+        // Fetch from database
+        var user = await FetchUserFromDatabaseAsync(userId);
+
+        // Cache for 10 minutes
+        await _cache.SetAsync(cacheKey, user, TimeSpan.FromMinutes(10));
+
+        return user;
+    }
+
+    public async Task InvalidateUserCacheAsync(int userId)
+    {
+        await _cache.RemoveAsync($"user:{userId}");
+    }
+}
+```
+
+## Validation
+
+### Extension Method Usage
+
+```csharp
+public class CreateUserRequest
+{
+    public string Email { get; set; } = string.Empty;
+    public string Name { get; set; } = string.Empty;
+    public int Age { get; set; }
+}
+
+public ValidationResult ValidateUser(CreateUserRequest request)
+{
+    return ValidationExtensions.Combine(
+        request.Email.ValidateRequired(nameof(request.Email)),
+        request.Email.ValidateEmail(nameof(request.Email)),
+        request.Name.ValidateRequired(nameof(request.Name)),
+        request.Name.ValidateMinLength(nameof(request.Name), 2),
+        request.Age.ValidateRange(nameof(request.Age), 18, 120)
+    );
+}
+
+// Usage
+var request = new CreateUserRequest { Email = "test@example.com", Name = "John", Age = 25 };
+var result = ValidateUser(request);
+
+if (!result.IsValid)
+{
+    foreach (var error in result.Errors)
+    {
+        Console.WriteLine($"{error.PropertyName}: {error.ErrorMessage}");
+    }
+}
+```
+
+## Serialization
+
+### JSON Serialization Helper
+
+```csharp
+// Serialize with default options
+var json = JsonSerializationHelper.Serialize(user);
+
+// Serialize with pretty printing
+var prettyJson = JsonSerializationHelper.Serialize(user, JsonSerializationHelper.PrettyOptions);
+
+// Deserialize
+var user = JsonSerializationHelper.Deserialize<User>(json);
+
+// Safe deserialization (returns default on failure)
+var user = JsonSerializationHelper.TryDeserialize<User>(json, defaultValue: null);
+
+// Clone object via JSON
+var clonedUser = JsonSerializationHelper.Clone(originalUser);
+
+// Convert to/from dictionary
+var dict = JsonSerializationHelper.ToDictionary(user);
+var user = JsonSerializationHelper.FromDictionary<User>(dict);
+```
+
+### Custom Converters
+
+```csharp
+var options = new JsonSerializerOptions
+{
+    Converters =
+    {
+        new UtcDateTimeConverter(),        // Ensures all dates are UTC
+        new TrimmingStringConverter()      // Trims whitespace from strings
+    }
+};
+
+var json = JsonSerializer.Serialize(user, options);
+```
+
+## Observability & Telemetry
+
+### Setup
+
+Register telemetry service in `Program.cs`:
+
+```csharp
+builder.Services.AddSingleton<ITelemetryService>(sp =>
+{
+    var logger = sp.GetRequiredService<ILogger<TelemetryService>>();
+    return new TelemetryService(logger, "MyApplication");
+});
+```
+
+### Usage
+
+```csharp
+public class OrderService
+{
+    private readonly ITelemetryService _telemetry;
+
+    public OrderService(ITelemetryService telemetry)
+    {
+        _telemetry = telemetry;
+    }
+
+    public async Task<Order> CreateOrderAsync(CreateOrderRequest request)
+    {
+        // Start a traced activity
+        using var activity = _telemetry.StartActivity("CreateOrder", ActivityKind.Server);
+
+        try
+        {
+            // Add tags to the current span
+            _telemetry.AddTag("order.total", request.Total);
+            _telemetry.AddTag("order.itemCount", request.Items.Count);
+
+            // Record metrics
+            _telemetry.RecordCounter("orders.created", 1,
+                new KeyValuePair<string, object?>("customer_type", request.CustomerType));
+
+            _telemetry.RecordHistogram("order.value", (double)request.Total,
+                new KeyValuePair<string, object?>("currency", "USD"));
+
+            var order = await ProcessOrderAsync(request);
+
+            // Record event
+            _telemetry.RecordEvent("OrderCreated",
+                new KeyValuePair<string, object?>("order_id", order.Id));
+
+            return order;
+        }
+        catch (Exception ex)
+        {
+            // Record exception
+            _telemetry.RecordException(ex,
+                new KeyValuePair<string, object?>("order_total", request.Total));
+            throw;
+        }
+    }
+
+    // Alternative: Use extension method for automatic tracing
+    public async Task<Order> CreateOrderWithAutoTracingAsync(CreateOrderRequest request)
+    {
+        return await _telemetry.ExecuteWithTracingAsync(
+            "CreateOrder",
+            async () => await ProcessOrderAsync(request),
+            ActivityKind.Server
+        );
+    }
+}
+```
+
+### Metrics Dashboard
+
+The telemetry service records:
+- **Counters**: Incremental values (e.g., request counts, error counts)
+- **Gauges**: Current values (e.g., active connections, queue length)
+- **Histograms**: Distributions (e.g., request duration, response size)
+
+All metrics are compatible with OpenTelemetry exporters (Prometheus, Jaeger, Application Insights, etc.).
 
 ## Resilience Patterns
 
@@ -553,58 +833,92 @@ catch (JsonException ex)
 
 ## Roadmap
 
-### Upcoming Features (Priority Order)
+### Recently Completed Features (v1.1.0)
 
-#### 1. Additional HTTP Methods
-**Status**: Planned
-**ETA**: Next release
+#### 1. Additional HTTP Methods ✅
+**Status**: ✅ Completed
 
-- `PutAsync<TRequest, TResponse>` - Update operations
-- `PatchAsync<TRequest, TResponse>` - Partial updates
-- `DeleteAsync` and `DeleteAsync<TResponse>` - Delete operations
+- `PutAsync<TRequest, TResponse>` - Update operations with response
+- `PutAsync<TRequest>` - Update operations without response
+- `PatchAsync<TRequest, TResponse>` - Partial updates with response
+- `PatchAsync<TRequest>` - Partial updates without response
+- `DeleteAsync<TResponse>` - Delete operations with response
+- `DeleteAsync` - Delete operations without response
 
-#### 2. Unit Tests
-**Status**: Planned
-**ETA**: Next release
+#### 2. Unit Tests ✅
+**Status**: ✅ Completed
 
 - Comprehensive test suite with xUnit
-- Mock HTTP handlers for testing
+- Mock HTTP handlers using Moq
 - Polly policy verification
 - Edge case coverage
+- Helper method tests
 
-#### 3. CI/CD Pipeline
-**Status**: Planned
-**ETA**: Next release
+#### 3. CI/CD Pipeline ✅
+**Status**: ✅ Completed
 
 - GitHub Actions workflow
 - Automated testing on commit
-- Code coverage reporting
-- NuGet package publication
+- Code coverage reporting with Codecov
+- NuGet package publication on tags
+- Multi-job pipeline (build, test, analyze, package, publish)
 
-#### 4. Distributed Caching
-**Status**: Planned
-**ETA**: Future release
+#### 4. Distributed Caching ✅
+**Status**: ✅ Completed
 
-- Redis cache wrapper
+- Redis cache wrapper via IDistributedCache
 - Memory cache fallback
-- Cache invalidation patterns
-- Distributed lock support
+- IDistributedCacheService interface
+- Batch operations (GetMany, SetMany, RemoveMany)
+- Automatic serialization/deserialization
 
-#### 5. Validation Framework
-**Status**: Planned
-**ETA**: Future release
+#### 5. Validation Framework ✅
+**Status**: ✅ Completed
 
-- FluentValidation extensions
-- Common validation rules
-- Integration with ASP.NET Core
+- ValidationExtensions with common rules
+- Email, phone, URL validation
+- Range validation
+- Date validation (past/future)
+- Collection validation
+- Custom validation result pattern
 
-#### 6. Serialization Helpers
-**Status**: Planned
-**ETA**: Future release
+#### 6. Serialization Helpers ✅
+**Status**: ✅ Completed
 
-- Custom JSON converters
-- XML serialization support
-- Binary serialization utilities
+- JsonSerializationHelper with multiple option sets
+- Custom JSON converters (UTC DateTime, trimming)
+- Safe deserialization methods
+- Dictionary conversion utilities
+- Object cloning via JSON
+
+#### 7. Observability & Telemetry ✅
+**Status**: ✅ Completed
+
+- ITelemetryService with OpenTelemetry support
+- Distributed tracing with ActivitySource
+- Metrics (Counter, Gauge, Histogram) via System.Diagnostics.Metrics
+- Health check infrastructure
+- Exception tracking
+- Event recording
+
+### Upcoming Features (Next Releases)
+
+See [INFRASTRUCTURE_ROADMAP.md](./INFRASTRUCTURE_ROADMAP.md) for comprehensive roadmap including:
+
+#### Q1 2025
+- **AppliedAccountability.Data** - Entity Framework Core and Dapper support
+- **AppliedAccountability.Messaging** - RabbitMQ and Azure Service Bus
+
+#### Q2 2025
+- **AppliedAccountability.Security** - Authentication, authorization, encryption
+- **AppliedAccountability.Background** - Hangfire and Quartz.NET
+- **AppliedAccountability.Files** - Cloud storage integration
+
+#### Q3-Q4 2025
+- **AppliedAccountability.Notifications** - Multi-channel notifications
+- **AppliedAccountability.Reporting** - PDF, Excel, CSV generation
+- **AppliedAccountability.Search** - Elasticsearch integration
+- **AppliedAccountability.Integration** - Third-party API clients
 
 ### Migration Path
 

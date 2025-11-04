@@ -128,6 +128,279 @@ public abstract class BaseApiClient
     }
 
     /// <summary>
+    /// Makes an HTTP PUT request with resilience policies and logging
+    /// </summary>
+    protected async Task<TResponse> PutAsync<TRequest, TResponse>(
+        string url,
+        TRequest request,
+        string operationName,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+
+        Logger.LogInformation(
+            "[{RequestId}] Starting {OperationName} PUT request to {Url}",
+            requestId, operationName, url);
+
+        try
+        {
+            var requestContent = SerializeRequest(request);
+
+            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            {
+                var httpResponse = await HttpClient.PutAsync(url, requestContent, cancellationToken);
+                await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
+                return httpResponse;
+            });
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var result = DeserializeResponse<TResponse>(content, url, requestId);
+
+            stopwatch.Stop();
+
+            Logger.LogInformation(
+                "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms",
+                requestId, operationName, stopwatch.ElapsedMilliseconds);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+    }
+
+    /// <summary>
+    /// Makes an HTTP PUT request without expecting a response body
+    /// </summary>
+    protected async Task<bool> PutAsync<TRequest>(
+        string url,
+        TRequest request,
+        string operationName,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+
+        Logger.LogInformation(
+            "[{RequestId}] Starting {OperationName} PUT request to {Url}",
+            requestId, operationName, url);
+
+        try
+        {
+            var requestContent = SerializeRequest(request);
+
+            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            {
+                var httpResponse = await HttpClient.PutAsync(url, requestContent, cancellationToken);
+                await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
+                return httpResponse;
+            });
+
+            stopwatch.Stop();
+
+            Logger.LogInformation(
+                "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms",
+                requestId, operationName, stopwatch.ElapsedMilliseconds);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+    }
+
+    /// <summary>
+    /// Makes an HTTP PATCH request with resilience policies and logging
+    /// </summary>
+    protected async Task<TResponse> PatchAsync<TRequest, TResponse>(
+        string url,
+        TRequest request,
+        string operationName,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+
+        Logger.LogInformation(
+            "[{RequestId}] Starting {OperationName} PATCH request to {Url}",
+            requestId, operationName, url);
+
+        try
+        {
+            var requestContent = SerializeRequest(request);
+
+            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            {
+                var httpResponse = await HttpClient.PatchAsync(url, requestContent, cancellationToken);
+                await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
+                return httpResponse;
+            });
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var result = DeserializeResponse<TResponse>(content, url, requestId);
+
+            stopwatch.Stop();
+
+            Logger.LogInformation(
+                "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms",
+                requestId, operationName, stopwatch.ElapsedMilliseconds);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+    }
+
+    /// <summary>
+    /// Makes an HTTP PATCH request without expecting a response body
+    /// </summary>
+    protected async Task<bool> PatchAsync<TRequest>(
+        string url,
+        TRequest request,
+        string operationName,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+
+        Logger.LogInformation(
+            "[{RequestId}] Starting {OperationName} PATCH request to {Url}",
+            requestId, operationName, url);
+
+        try
+        {
+            var requestContent = SerializeRequest(request);
+
+            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            {
+                var httpResponse = await HttpClient.PatchAsync(url, requestContent, cancellationToken);
+                await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
+                return httpResponse;
+            });
+
+            stopwatch.Stop();
+
+            Logger.LogInformation(
+                "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms",
+                requestId, operationName, stopwatch.ElapsedMilliseconds);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+    }
+
+    /// <summary>
+    /// Makes an HTTP DELETE request with resilience policies and logging
+    /// </summary>
+    protected async Task<TResponse> DeleteAsync<TResponse>(
+        string url,
+        string operationName,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+
+        Logger.LogInformation(
+            "[{RequestId}] Starting {OperationName} DELETE request to {Url}",
+            requestId, operationName, url);
+
+        try
+        {
+            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            {
+                var httpResponse = await HttpClient.DeleteAsync(url, cancellationToken);
+                await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
+                return httpResponse;
+            });
+
+            var content = await response.Content.ReadAsStringAsync(cancellationToken);
+            var result = DeserializeResponse<TResponse>(content, url, requestId);
+
+            stopwatch.Stop();
+
+            Logger.LogInformation(
+                "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms. Response size: {ResponseSize} bytes",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, content.Length);
+
+            return result;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+    }
+
+    /// <summary>
+    /// Makes an HTTP DELETE request without expecting a response body
+    /// </summary>
+    protected async Task<bool> DeleteAsync(
+        string url,
+        string operationName,
+        CancellationToken cancellationToken = default)
+    {
+        var requestId = Guid.NewGuid();
+        var stopwatch = Stopwatch.StartNew();
+
+        Logger.LogInformation(
+            "[{RequestId}] Starting {OperationName} DELETE request to {Url}",
+            requestId, operationName, url);
+
+        try
+        {
+            var response = await _resiliencePolicy.ExecuteAsync(async () =>
+            {
+                var httpResponse = await HttpClient.DeleteAsync(url, cancellationToken);
+                await EnsureSuccessStatusCodeAsync(httpResponse, url, requestId);
+                return httpResponse;
+            });
+
+            stopwatch.Stop();
+
+            Logger.LogInformation(
+                "[{RequestId}] {OperationName} completed successfully in {ElapsedMs}ms",
+                requestId, operationName, stopwatch.ElapsedMilliseconds);
+
+            return response.IsSuccessStatusCode;
+        }
+        catch (Exception ex)
+        {
+            stopwatch.Stop();
+            Logger.LogError(ex,
+                "[{RequestId}] {OperationName} failed after {ElapsedMs}ms. URL: {Url}",
+                requestId, operationName, stopwatch.ElapsedMilliseconds, url);
+            throw new ApiClientException(operationName, url, requestId, ex);
+        }
+    }
+
+    /// <summary>
     /// Makes an HTTP GET request and returns raw HttpResponseMessage for custom processing
     /// </summary>
     protected async Task<HttpResponseMessage> GetRawAsync(
