@@ -16,6 +16,23 @@ Core infrastructure components:
 
 ---
 
+## Related Projects
+
+### Conductor - Distributed Workflow Orchestration Platform
+**Status**: ✅ Production-Ready | **Repository**: Internal
+
+Conductor provides comprehensive distributed workflow capabilities:
+- **Job Scheduling** - Quartz.NET with PostgreSQL, cron-based scheduling, clustering
+- **Saga Orchestration** - Long-running workflows with compensation transactions
+- **Message Bus** - MassTransit + RabbitMQ abstractions with dead letter queue handling
+- **Admin Dashboard** - React-based UI for monitoring and management
+
+**Use Conductor when:** Your application needs job scheduling, distributed workflows, or saga orchestration.
+
+**See:** [Conductor vs Infrastructure Decision Matrix](#conductor-vs-infrastructure-libraries) below for guidance.
+
+---
+
 ## Additional Core Infrastructure Libraries
 
 ### 1. AppliedAccountability.Data
@@ -63,46 +80,54 @@ Data access layer with Entity Framework Core, Dapper, and common patterns for da
 
 ---
 
-### 2. AppliedAccountability.Messaging
-**Priority**: High | **ETA**: Q1 2025
+### 2. AppliedAccountability.EventStore
+**Priority**: Low | **ETA**: Q2 2025
 
 #### Purpose
-Message queue and event-driven architecture support with RabbitMQ, Azure Service Bus, and in-memory options.
+Simple event store for audit logging, change tracking, and event history without complex orchestration.
 
 #### Features
-- **Message Bus Abstraction**
-  - Provider-agnostic message publishing
-  - Message consumption with handlers
-  - Dead letter queue handling
-  - Retry policies
+- **Event Persistence**
+  - Append-only event storage
+  - Event streams by aggregate ID
+  - PostgreSQL-based storage
+  - Event metadata (timestamp, user, correlation ID)
 
-- **Event Sourcing**
-  - Event store implementation
-  - Event replay capabilities
-  - Snapshot support
+- **Event Retrieval**
+  - Query by stream/aggregate
+  - Query by event type
+  - Query by date range
+  - Pagination support
 
-- **Patterns**
-  - Publisher/Subscriber
-  - Request/Reply
-  - Competing consumers
-  - Message routing
+- **Snapshots**
+  - Snapshot creation for performance
+  - Configurable snapshot intervals
+  - Automatic snapshot loading
 
-- **Providers**
-  - RabbitMQ (primary)
-  - Azure Service Bus
-  - In-memory (for testing)
+- **Event Replay**
+  - Rebuild state from events
+  - Point-in-time reconstruction
+  - Event versioning support
 
-- **Observability**
-  - Message tracing
-  - Performance metrics
-  - Error tracking
+- **NOT Included** (Use Conductor for these)
+  - Message bus integration
+  - Saga orchestration
+  - Distributed transactions
+  - Compensation logic
 
 #### Technology Stack
 ```xml
-<PackageReference Include="MassTransit" Version="8.x" />
-<PackageReference Include="MassTransit.RabbitMQ" Version="8.x" />
-<PackageReference Include="MassTransit.Azure.ServiceBus.Core" Version="8.x" />
+<PackageReference Include="Microsoft.EntityFrameworkCore" Version="9.0.x" />
+<PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.x" />
 ```
+
+#### Use Cases
+- Audit trails and compliance
+- Change history tracking
+- Domain event logging
+- Simple CQRS implementations (read models)
+
+**When to use Conductor instead:** If you need distributed workflows, sagas, message bus integration, or compensation transactions.
 
 ---
 
@@ -128,7 +153,7 @@ Comprehensive security utilities including authentication, authorization, encryp
 - **Encryption**
   - Data encryption at rest
   - Field-level encryption
-  - Secure key management (Azure Key Vault, AWS Secrets Manager)
+  - Secure key management (file-based, HashiCorp Vault, Azure Key Vault/AWS Secrets Manager optional)
   - Hashing utilities (passwords, checksums)
 
 - **Data Protection**
@@ -152,58 +177,18 @@ Comprehensive security utilities including authentication, authorization, encryp
 
 ---
 
-### 4. AppliedAccountability.Background
+### 4. AppliedAccountability.Files
 **Priority**: Medium | **ETA**: Q2 2025
 
 #### Purpose
-Background job processing with Hangfire, Quartz.NET, and task scheduling.
-
-#### Features
-- **Job Scheduling**
-  - Cron-based scheduling
-  - Recurring jobs
-  - One-time jobs
-  - Job prioritization
-
-- **Task Queue**
-  - Background task processing
-  - Long-running operations
-  - Job cancellation
-  - Job chaining and workflows
-
-- **Monitoring**
-  - Job execution tracking
-  - Failure handling and retries
-  - Performance metrics
-  - Job dashboard
-
-- **Providers**
-  - Hangfire (primary)
-  - Quartz.NET
-  - Background Service (simple tasks)
-
-#### Technology Stack
-```xml
-<PackageReference Include="Hangfire.Core" Version="1.8.x" />
-<PackageReference Include="Hangfire.AspNetCore" Version="1.8.x" />
-<PackageReference Include="Hangfire.PostgreSql" Version="1.20.x" />
-<PackageReference Include="Quartz" Version="3.x" />
-```
-
----
-
-### 5. AppliedAccountability.Files
-**Priority**: Medium | **ETA**: Q2 2025
-
-#### Purpose
-File storage and management with support for local, Azure Blob, AWS S3, and more.
+File storage and management with support for local storage and self-hosted options (cloud providers optional).
 
 #### Features
 - **Storage Providers**
-  - Local file system
-  - Azure Blob Storage
-  - AWS S3
-  - Google Cloud Storage
+  - Local file system (primary)
+  - Self-hosted S3-compatible (MinIO, Ceph)
+  - Azure Blob Storage (optional)
+  - AWS S3 (optional)
 
 - **File Operations**
   - Upload/download with progress tracking
@@ -230,7 +215,7 @@ File storage and management with support for local, Azure Blob, AWS S3, and more
 
 ---
 
-### 6. AppliedAccountability.Notifications
+### 5. AppliedAccountability.Notifications
 **Priority**: Medium | **ETA**: Q3 2025
 
 #### Purpose
@@ -238,9 +223,9 @@ Multi-channel notification system for email, SMS, push notifications, and webhoo
 
 #### Features
 - **Channels**
-  - Email (SendGrid, SMTP)
-  - SMS (Twilio, AWS SNS)
-  - Push notifications (Firebase, APNs)
+  - Email (SMTP primary, SendGrid optional)
+  - SMS (generic HTTP provider, Twilio optional)
+  - Push notifications (self-hosted provider, Firebase optional)
   - Webhooks
   - In-app notifications
 
@@ -271,7 +256,7 @@ Multi-channel notification system for email, SMS, push notifications, and webhoo
 
 ---
 
-### 7. AppliedAccountability.Reporting
+### 6. AppliedAccountability.Reporting
 **Priority**: Low | **ETA**: Q3 2025
 
 #### Purpose
@@ -309,17 +294,18 @@ Report generation and export functionality with support for PDF, Excel, and CSV.
 
 ---
 
-### 8. AppliedAccountability.Search
+### 7. AppliedAccountability.Search
 **Priority**: Low | **ETA**: Q4 2025
 
 #### Purpose
-Full-text search capabilities with Elasticsearch, Azure Cognitive Search, or PostgreSQL FTS.
+Full-text search capabilities with self-hosted options (cloud providers optional).
 
 #### Features
 - **Search Providers**
-  - Elasticsearch (primary)
-  - Azure Cognitive Search
-  - PostgreSQL Full-Text Search
+  - PostgreSQL Full-Text Search (primary, built-in)
+  - Elasticsearch (self-hosted)
+  - OpenSearch (self-hosted, AWS-compatible)
+  - Azure Cognitive Search (optional)
 
 - **Indexing**
   - Automatic indexing
@@ -347,7 +333,7 @@ Full-text search capabilities with Elasticsearch, Azure Cognitive Search, or Pos
 
 ---
 
-### 9. AppliedAccountability.ApiGateway
+### 8. AppliedAccountability.ApiGateway
 **Priority**: Low | **ETA**: Q4 2025
 
 #### Purpose
@@ -387,7 +373,7 @@ API Gateway patterns including rate limiting, request aggregation, and API versi
 
 ---
 
-### 10. AppliedAccountability.Integration
+### 9. AppliedAccountability.Integration
 **Priority**: Medium | **ETA**: Q3 2025
 
 #### Purpose
@@ -426,12 +412,12 @@ Third-party integration helpers and common API client implementations.
 ### Phase 1: Foundation (Q1 2025)
 1. **AppliedAccountability.Infrastructure** ✅ Complete
 2. **AppliedAccountability.Data** - Start Q1
-3. **AppliedAccountability.Messaging** - Start Q1
+3. **Conductor** ✅ Production-Ready (Job scheduling, messaging, sagas)
 
-### Phase 2: Security & Processing (Q2 2025)
+### Phase 2: Security & Storage (Q2 2025)
 4. **AppliedAccountability.Security**
-5. **AppliedAccountability.Background**
-6. **AppliedAccountability.Files**
+5. **AppliedAccountability.Files**
+6. **AppliedAccountability.EventStore** (optional - based on use case needs)
 
 ### Phase 3: Communication & Analytics (Q3 2025)
 7. **AppliedAccountability.Notifications**
@@ -502,14 +488,15 @@ Third-party integration helpers and common API client implementations.
 
 1. **Separation of Concerns** - Each library has a single, well-defined purpose
 2. **Provider Agnostic** - Interface-based design with multiple implementations
-3. **Dependency Injection** - Full DI container support
-4. **Testability** - Easy to mock and test
-5. **Performance** - Optimized for production use
-6. **Observability** - Built-in logging, metrics, and tracing
-7. **Resilience** - Retry policies, circuit breakers, fallbacks
-8. **Security** - Secure by default
-9. **Documentation** - Comprehensive documentation and examples
-10. **Backwards Compatibility** - Minimize breaking changes
+3. **Cloud-Agnostic** - Self-hosted/open-source solutions first, cloud providers optional
+4. **Dependency Injection** - Full DI container support
+5. **Testability** - Easy to mock and test
+6. **Performance** - Optimized for production use
+7. **Observability** - Built-in logging, metrics, and tracing
+8. **Resilience** - Retry policies, circuit breakers, fallbacks
+9. **Security** - Secure by default
+10. **Documentation** - Comprehensive documentation and examples
+11. **Backwards Compatibility** - Minimize breaking changes
 
 ---
 
@@ -529,6 +516,51 @@ Third-party integration helpers and common API client implementations.
 - Easy integration (<30 minutes)
 - Clear documentation
 - Responsive support
+
+---
+
+## Conductor vs Infrastructure Libraries
+
+### Decision Matrix
+
+Use this matrix to decide whether to use **Conductor** or an **Infrastructure Library** for your needs:
+
+| **You Need...** | **Use This** | **Why** |
+|----------------|-------------|---------|
+| Job scheduling (cron, recurring tasks) | **Conductor** | Production-ready with Quartz.NET, clustering, admin UI |
+| Background task processing | **Conductor** | Built-in job queue with retry/timeout handling |
+| Distributed workflows / Sagas | **Conductor** | Saga orchestration engine with compensation transactions |
+| Message publishing/consuming | **Conductor** | MassTransit + RabbitMQ with dead letter queue handling |
+| Event-driven architecture | **Conductor** | Message bus integration with saga coordination |
+| Simple audit logging | **EventStore** (when built) | Lightweight event persistence without orchestration |
+| Change tracking / history | **EventStore** (when built) | Append-only event storage for compliance |
+| Domain events (no workflows) | **EventStore** (when built) | Event persistence without message bus coupling |
+| Data access patterns | **Data** | Repository pattern, EF Core, Dapper helpers |
+| Authentication / Authorization | **Security** | JWT, OAuth, encryption, PII protection |
+| File storage | **Files** | Local, MinIO, or optional cloud storage |
+| Email / SMS / Push notifications | **Notifications** | Multi-channel notification system |
+| PDF / Excel / CSV reports | **Reporting** | Report generation and templating |
+| Full-text search | **Search** | PostgreSQL FTS, Elasticsearch, OpenSearch |
+| Rate limiting / API versioning | **ApiGateway** | API management patterns |
+| Third-party integrations | **Integration** | Stripe, Plaid, Auth0, etc. |
+
+### When to Combine
+
+Many applications will use **both** Conductor and Infrastructure libraries:
+
+**Example: E-commerce Application**
+- **Conductor**: Order processing workflows, inventory sync jobs, abandoned cart reminders
+- **Data**: Order repository, customer data access
+- **Security**: User authentication, payment encryption
+- **Files**: Product image storage
+- **Notifications**: Order confirmation emails, shipping updates
+- **Reporting**: Sales reports, invoice generation
+
+### Key Rule of Thumb
+
+> **If it involves scheduling, workflows, or distributed coordination → Use Conductor**
+>
+> **If it's a general-purpose utility (auth, storage, search) → Use Infrastructure Libraries**
 
 ---
 
