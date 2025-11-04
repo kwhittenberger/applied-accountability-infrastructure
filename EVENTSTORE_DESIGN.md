@@ -121,6 +121,7 @@ public interface IEventStore
     Task AppendAsync(
         string streamId,
         EventData eventData,
+        int? expectedVersion = null,
         CancellationToken cancellationToken = default);
 
     // Read all events from a stream
@@ -273,19 +274,22 @@ public class Account
         switch (@event.EventType)
         {
             case "AccountOpened":
-                var opened = JsonSerializer.Deserialize<AccountOpenedEvent>(@event.EventData);
+                var opened = JsonSerializer.Deserialize<AccountOpenedEvent>(@event.EventData)
+                    ?? throw new InvalidOperationException("Failed to deserialize AccountOpenedEvent");
                 AccountId = opened.AccountId;
                 Balance = opened.InitialDeposit;
                 IsActive = true;
                 break;
 
             case "MoneyDeposited":
-                var deposited = JsonSerializer.Deserialize<MoneyDepositedEvent>(@event.EventData);
+                var deposited = JsonSerializer.Deserialize<MoneyDepositedEvent>(@event.EventData)
+                    ?? throw new InvalidOperationException("Failed to deserialize MoneyDepositedEvent");
                 Balance += deposited.Amount;
                 break;
 
             case "MoneyWithdrawn":
-                var withdrawn = JsonSerializer.Deserialize<MoneyWithdrawnEvent>(@event.EventData);
+                var withdrawn = JsonSerializer.Deserialize<MoneyWithdrawnEvent>(@event.EventData)
+                    ?? throw new InvalidOperationException("Failed to deserialize MoneyWithdrawnEvent");
                 Balance -= withdrawn.Amount;
                 break;
 
@@ -312,7 +316,8 @@ public class AccountService
 
         if (snapshot != null)
         {
-            account = JsonSerializer.Deserialize<Account>(snapshot.StateData);
+            account = JsonSerializer.Deserialize<Account>(snapshot.StateData)
+                ?? throw new InvalidOperationException("Failed to deserialize Account snapshot");
             fromVersion = snapshot.Version + 1;
         }
 
@@ -346,16 +351,12 @@ public class AccountService
             }
         );
 
-        // Create snapshot every 10 events
-        var events = await _eventStore.ReadStreamAsync(streamId);
-        if (events.Count % 10 == 0)
+        // Create snapshot every 10 events (use GetStreamVersionAsync for better performance)
+        var version = await _eventStore.GetStreamVersionAsync(streamId);
+        if (version % 10 == 0)
         {
             var account = await GetAccountAsync(accountId);
-            await _snapshotStore.SaveSnapshotAsync(
-                streamId,
-                events.Count,
-                account
-            );
+            await _snapshotStore.SaveSnapshotAsync(streamId, version, account);
         }
     }
 }
@@ -406,8 +407,10 @@ public class ComplianceService
         );
 
         return events
-            .Select(e => JsonSerializer.Deserialize<dynamic>(e.EventData))
-            .Select(data => (string)data.UserId)
+            .Select(e => JsonSerializer.Deserialize<JsonElement>(e.EventData))
+            .Where(data => data.TryGetProperty("UserId", out _))
+            .Select(data => data.GetProperty("UserId").GetString() ?? string.Empty)
+            .Where(userId => !string.IsNullOrEmpty(userId))
             .Distinct()
             .ToList();
     }
@@ -672,31 +675,46 @@ await _publishEndpoint.Publish(new OrderCreatedEvent
 ```csharp
 public class InMemoryEventStore : IEventStore
 {
-    private readonly Dictionary<string, List<Event>> _streams = new();
+    private readonly ConcurrentDictionary<string, List<Event>> _streams = new();
     private long _position = 0;
+    private readonly object _lock = new();
 
-    public Task AppendAsync(string streamId, EventData eventData, ...)
+    public Task AppendAsync(
+        string streamId,
+        EventData eventData,
+        int? expectedVersion = null,
+        CancellationToken cancellationToken = default)
     {
-        if (!_streams.ContainsKey(streamId))
-            _streams[streamId] = new List<Event>();
-
-        var stream = _streams[streamId];
-        var @event = new Event
+        lock (_lock)
         {
-            Id = ++_position,
-            StreamId = streamId,
-            EventType = eventData.EventType,
-            EventData = JsonSerializer.Serialize(eventData.Data),
-            Version = stream.Count + 1,
-            Timestamp = DateTime.UtcNow,
-            CorrelationId = eventData.CorrelationId
-        };
+            if (!_streams.ContainsKey(streamId))
+                _streams[streamId] = new List<Event>();
 
-        stream.Add(@event);
-        return Task.CompletedTask;
+            var stream = _streams[streamId];
+
+            // Check expected version if provided
+            if (expectedVersion.HasValue && stream.Count != expectedVersion.Value)
+            {
+                throw new ConcurrencyException(streamId, expectedVersion.Value, stream.Count);
+            }
+
+            var @event = new Event
+            {
+                Id = Interlocked.Increment(ref _position),
+                StreamId = streamId,
+                EventType = eventData.EventType,
+                EventData = JsonSerializer.Serialize(eventData.Data),
+                Version = stream.Count + 1,
+                Timestamp = DateTime.UtcNow,
+                CorrelationId = eventData.CorrelationId
+            };
+
+            stream.Add(@event);
+            return Task.CompletedTask;
+        }
     }
 
-    // ... other methods
+    /* Other IEventStore methods would be implemented here */
 }
 
 // Test usage
