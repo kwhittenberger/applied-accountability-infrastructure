@@ -5,6 +5,7 @@ using AppliedAccountability.Infrastructure.Http;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Moq.Protected;
+using Xunit;
 
 namespace AppliedAccountability.Infrastructure.Tests.Http;
 

@@ -131,7 +131,15 @@ public class TelemetryService : ITelemetryService
             if (activity != null)
             {
                 activity.SetStatus(ActivityStatusCode.Error, exception.Message);
-                activity.RecordException(exception);
+
+                // Record exception details using Activity events (OpenTelemetry semantic conventions)
+                var activityTags = new ActivityTagsCollection
+                {
+                    { "exception.type", exception.GetType().FullName },
+                    { "exception.message", exception.Message },
+                    { "exception.stacktrace", exception.StackTrace }
+                };
+                activity.AddEvent(new ActivityEvent("exception", tags: activityTags));
             }
 
             var tagList = tags.ToList();
