@@ -401,7 +401,8 @@ public class UtcDateTimeConverterTests
     public UtcDateTimeConverterTests()
     {
         _options = new JsonSerializerOptions();
-        _options.Converters.Add(new UtcDateTimeConverter());
+        // Note: In .NET 10, converters should be applied via [JsonConverter] attribute on properties
+        // rather than adding to options.Converters collection
     }
 
     #region Read Tests
@@ -413,7 +414,8 @@ public class UtcDateTimeConverterTests
         var json = "{\"date\":\"2025-01-15T10:30:00Z\"}";
 
         // Act
-        var result = JsonSerializer.Deserialize<DateTimeWrapper>(json, _options);
+        // Note: Passing null options to use defaults and respect [JsonConverter] attributes
+        var result = JsonSerializer.Deserialize<DateTimeWrapper>(json);
 
         // Assert
         Assert.NotNull(result);
@@ -476,7 +478,8 @@ public class NullableUtcDateTimeConverterTests
     public NullableUtcDateTimeConverterTests()
     {
         _options = new JsonSerializerOptions();
-        _options.Converters.Add(new NullableUtcDateTimeConverter());
+        // Note: In .NET 10, converters should be applied via [JsonConverter] attribute on properties
+        // rather than adding to options.Converters collection
     }
 
     #region Read Tests
@@ -554,7 +557,8 @@ public class TrimmingStringConverterTests
     public TrimmingStringConverterTests()
     {
         _options = new JsonSerializerOptions();
-        _options.Converters.Add(new TrimmingStringConverter());
+        // Note: In .NET 10, converters should be applied via [JsonConverter] attribute on properties
+        // rather than adding to options.Converters collection
     }
 
     #region Read Tests

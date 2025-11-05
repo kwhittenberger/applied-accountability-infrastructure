@@ -55,7 +55,7 @@ public class DistributedCacheServiceTests
     public async Task GetAsync_WithNullKey_ThrowsArgumentException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _service.GetAsync<TestCacheObject>(null!));
     }
 
@@ -147,7 +147,7 @@ public class DistributedCacheServiceTests
         var value = new TestCacheObject { Id = 1, Name = "Test" };
 
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _service.SetAsync(null!, value));
     }
 
@@ -240,7 +240,7 @@ public class DistributedCacheServiceTests
     public async Task RemoveAsync_WithNullKey_ThrowsArgumentException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _service.RemoveAsync(null!));
     }
 
@@ -282,7 +282,7 @@ public class DistributedCacheServiceTests
     public async Task ExistsAsync_WithNullKey_ThrowsArgumentException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _service.ExistsAsync(null!));
     }
 
@@ -454,7 +454,7 @@ public class DistributedCacheServiceTests
     public async Task RefreshAsync_WithNullKey_ThrowsArgumentException()
     {
         // Act & Assert
-        await Assert.ThrowsAsync<ArgumentException>(async () =>
+        await Assert.ThrowsAsync<ArgumentNullException>(async () =>
             await _service.RefreshAsync(null!));
     }
 
