@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.Json.Serialization;
 using AppliedAccountability.Infrastructure.Serialization;
 using Xunit;
 
@@ -644,15 +645,18 @@ public class TestObject
 
 public class DateTimeWrapper
 {
+    [JsonConverter(typeof(UtcDateTimeConverter))]
     public DateTime Date { get; set; }
 }
 
 public class NullableDateTimeWrapper
 {
+    [JsonConverter(typeof(NullableUtcDateTimeConverter))]
     public DateTime? Date { get; set; }
 }
 
 public class StringWrapper
 {
+    [JsonConverter(typeof(TrimmingStringConverter))]
     public string? Value { get; set; }
 }

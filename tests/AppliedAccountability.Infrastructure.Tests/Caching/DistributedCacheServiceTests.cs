@@ -76,8 +76,8 @@ public class DistributedCacheServiceTests
         var serializedData = System.Text.Json.JsonSerializer.Serialize(expectedObject);
 
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(serializedData);
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes(serializedData));
 
         // Act
         var result = await _service.GetAsync<TestCacheObject>(key);
@@ -94,8 +94,8 @@ public class DistributedCacheServiceTests
         // Arrange
         var key = "non-existent-key";
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string?)null);
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[]?)null);
 
         // Act
         var result = await _service.GetAsync<TestCacheObject>(key);
@@ -110,8 +110,8 @@ public class DistributedCacheServiceTests
         // Arrange
         var key = "invalid-json-key";
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("invalid json data");
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("invalid json data"));
 
         // Act
         var result = await _service.GetAsync<TestCacheObject>(key);
@@ -126,7 +126,7 @@ public class DistributedCacheServiceTests
         // Arrange
         var key = "test-key";
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException());
 
         // Act
@@ -167,9 +167,9 @@ public class DistributedCacheServiceTests
         var value = new TestCacheObject { Id = 1, Name = "Test" };
 
         _mockCache
-            .Setup(c => c.SetStringAsync(
+            .Setup(c => c.SetAsync(
                 key,
-                It.IsAny<string>(),
+                It.IsAny<byte[]>(),
                 It.IsAny<DistributedCacheEntryOptions>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -178,9 +178,9 @@ public class DistributedCacheServiceTests
         await _service.SetAsync(key, value);
 
         // Assert
-        _mockCache.Verify(c => c.SetStringAsync(
+        _mockCache.Verify(c => c.SetAsync(
             key,
-            It.IsAny<string>(),
+            It.IsAny<byte[]>(),
             It.IsAny<DistributedCacheEntryOptions>(),
             It.IsAny<CancellationToken>()), Times.Once);
     }
@@ -195,12 +195,12 @@ public class DistributedCacheServiceTests
 
         DistributedCacheEntryOptions? capturedOptions = null;
         _mockCache
-            .Setup(c => c.SetStringAsync(
+            .Setup(c => c.SetAsync(
                 key,
-                It.IsAny<string>(),
+                It.IsAny<byte[]>(),
                 It.IsAny<DistributedCacheEntryOptions>(),
                 It.IsAny<CancellationToken>()))
-            .Callback<string, string, DistributedCacheEntryOptions, CancellationToken>(
+            .Callback<string, byte[], DistributedCacheEntryOptions, CancellationToken>(
                 (_, _, options, _) => capturedOptions = options)
             .Returns(Task.CompletedTask);
 
@@ -220,9 +220,9 @@ public class DistributedCacheServiceTests
         var value = new TestCacheObject { Id = 1, Name = "Test" };
 
         _mockCache
-            .Setup(c => c.SetStringAsync(
+            .Setup(c => c.SetAsync(
                 key,
-                It.IsAny<string>(),
+                It.IsAny<byte[]>(),
                 It.IsAny<DistributedCacheEntryOptions>(),
                 It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException());
@@ -292,8 +292,8 @@ public class DistributedCacheServiceTests
         // Arrange
         var key = "existing-key";
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
-            .ReturnsAsync("some data");
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes("some data"));
 
         // Act
         var result = await _service.ExistsAsync(key);
@@ -308,8 +308,8 @@ public class DistributedCacheServiceTests
         // Arrange
         var key = "non-existent-key";
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string?)null);
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[]?)null);
 
         // Act
         var result = await _service.ExistsAsync(key);
@@ -324,7 +324,7 @@ public class DistributedCacheServiceTests
         // Arrange
         var key = "test-key";
         _mockCache
-            .Setup(c => c.GetStringAsync(key, It.IsAny<CancellationToken>()))
+            .Setup(c => c.GetAsync(key, It.IsAny<CancellationToken>()))
             .ThrowsAsync(new OperationCanceledException());
 
         // Act
@@ -355,14 +355,14 @@ public class DistributedCacheServiceTests
         var obj2 = new TestCacheObject { Id = 2, Name = "Test2" };
 
         _mockCache
-            .Setup(c => c.GetStringAsync("key1", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(System.Text.Json.JsonSerializer.Serialize(obj1));
+            .Setup(c => c.GetAsync("key1", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(obj1)));
         _mockCache
-            .Setup(c => c.GetStringAsync("key2", It.IsAny<CancellationToken>()))
-            .ReturnsAsync(System.Text.Json.JsonSerializer.Serialize(obj2));
+            .Setup(c => c.GetAsync("key2", It.IsAny<CancellationToken>()))
+            .ReturnsAsync(System.Text.Encoding.UTF8.GetBytes(System.Text.Json.JsonSerializer.Serialize(obj2)));
         _mockCache
-            .Setup(c => c.GetStringAsync("key3", It.IsAny<CancellationToken>()))
-            .ReturnsAsync((string?)null);
+            .Setup(c => c.GetAsync("key3", It.IsAny<CancellationToken>()))
+            .ReturnsAsync((byte[]?)null);
 
         // Act
         var result = await _service.GetManyAsync<TestCacheObject>(keys);
@@ -398,9 +398,9 @@ public class DistributedCacheServiceTests
         };
 
         _mockCache
-            .Setup(c => c.SetStringAsync(
+            .Setup(c => c.SetAsync(
                 It.IsAny<string>(),
-                It.IsAny<string>(),
+                It.IsAny<byte[]>(),
                 It.IsAny<DistributedCacheEntryOptions>(),
                 It.IsAny<CancellationToken>()))
             .Returns(Task.CompletedTask);
@@ -409,9 +409,9 @@ public class DistributedCacheServiceTests
         await _service.SetManyAsync(items);
 
         // Assert
-        _mockCache.Verify(c => c.SetStringAsync(
+        _mockCache.Verify(c => c.SetAsync(
             It.IsAny<string>(),
-            It.IsAny<string>(),
+            It.IsAny<byte[]>(),
             It.IsAny<DistributedCacheEntryOptions>(),
             It.IsAny<CancellationToken>()), Times.Exactly(2));
     }
