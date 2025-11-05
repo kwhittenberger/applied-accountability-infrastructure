@@ -302,13 +302,15 @@ public class ValidationExceptionTests
     {
         // Arrange
         var errors = new List<ValidationError>();
+        var username = "";
+        var email = "invalid@";
 
         // Simulate validation
-        if (string.IsNullOrEmpty(""))
+        if (string.IsNullOrEmpty(username))
             errors.Add(new ValidationError("Username", "Username is required", "USERNAME_REQUIRED"));
 
-        if (!"invalid@".Contains("@."))
-            errors.Add(new ValidationError("Email", "Email format is invalid", "EMAIL_INVALID", "invalid@"));
+        if (!email.Contains("@."))
+            errors.Add(new ValidationError("Email", "Email format is invalid", "EMAIL_INVALID", email));
 
         // Act & Assert
         var exception = Assert.Throws<ValidationException>(() =>
@@ -326,9 +328,7 @@ public class ValidationExceptionTests
         // Arrange
         var errors = new List<ValidationError>();
 
-        // Simulate successful validation
-        var username = "validuser";
-        var email = "valid@example.com";
+        // Simulate successful validation - no validation errors added
 
         // Act - No exception should be thrown
         if (errors.Count > 0)

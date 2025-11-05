@@ -124,7 +124,7 @@ public class JsonSerializationHelperTests
     {
         // Arrange
         var obj = new TestObject { Id = 1, Name = "Test", IsActive = true };
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
 
         // Act
         var json = await JsonSerializationHelper.SerializeAsync(obj, cancellationToken: cts.Token);
@@ -220,7 +220,7 @@ public class JsonSerializationHelperTests
     {
         // Arrange
         var json = "{\"id\":1,\"name\":\"Test\"}";
-        var cts = new CancellationTokenSource();
+        using var cts = new CancellationTokenSource();
 
         // Act
         var obj = await JsonSerializationHelper.DeserializeAsync<TestObject>(json, cancellationToken: cts.Token);
@@ -522,7 +522,7 @@ public class NullableUtcDateTimeConverterTests
         // Assert
         Assert.NotNull(result);
         Assert.NotNull(result.Date);
-        Assert.Equal(DateTimeKind.Utc, result.Date.Value.Kind);
+        Assert.Equal(DateTimeKind.Utc, result.Date!.Value.Kind);
     }
 
     #endregion
